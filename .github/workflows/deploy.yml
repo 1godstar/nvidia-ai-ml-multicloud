@@ -1,0 +1,31 @@
+name: Deploy AI Model
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2  # Change to your region
+
+      - name: Upload model to S3
+        run: |
+          aws s3 cp model/model.pkl s3://ai-model-bucket-1godstar/model.pkl
+
+      - name: Update Lambda Function
+        run: |
+          aws lambda update-function-code \
+            --function-name ai-inference \
+            --s3-bucket ai-model-bucket-1godstar \
+            --s3-key model.pkl
