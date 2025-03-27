@@ -10,12 +10,15 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - run: |
-          # Upload model to S3
-          aws s3 cp model/model.pkl s3://ai-model-bucket-1godstar/model.pkl
-          # Package Lambda code
-          zip lambda_function.zip lambda_function.py
-          # Update Lambda function
-          aws lambda update-function-code \
-            --function-name ai-inference \
-            --zip-file fileb://lambda_function.zip
+      - name: Upload model to S3
+        run: aws s3 cp model/model.pkl s3://ai-model-bucket-1godstar/model.pkl
+      - name: Package Lambda code (if exists)
+        run: |
+          if [ -f "lambda_function.py" ]; then
+            zip lambda_function.zip lambda_function.py
+            aws lambda update-function-code \
+              --function-name ai-inference \
+              --zip-file fileb://lambda_function.zip
+          else
+            echo "No lambda_function.py found. Skipping Lambda update."
+          fi
